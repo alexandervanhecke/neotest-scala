@@ -222,6 +222,8 @@ function ScalaNeotestAdapter.build_spec(args)
     local extra_args = vim.list_extend(get_args(), args.extra_args or {})
     local command = framework.build_command(runner, project, args.tree, utils.get_position_name(position), extra_args)
     local strategy = get_strategy_config(args.strategy, args.tree, project)
+    neotest_logging.info("command is " .. command)
+    neotest_logging.info("strategy is " .. strategy)
     return { command = command, strategy = strategy }
 end
 
