@@ -5,6 +5,8 @@ local M = {}
 TEST_PASSED = "passed" -- the test passed
 TEST_FAILED = "failed" -- the test failed
 
+local neotest_logging = require("neotest.logging")
+
 ---@class neotest-scala.Framework
 ---@field build_command fun(runner: string, project: string, tree: neotest.Tree, name: string, extra_args: table|string): string[]
 ---@field get_test_results fun(output_lines: string[]): table<string, string>
@@ -43,6 +45,10 @@ local function build_command_with_test_path(project, runner, test_path, extra_ar
         else
             full_test_path = { "--", test_path }
         end
+        neotest_logging.info(
+            "will use bloop run with following command"
+                .. vim.tbl_flatten({ "bloop", "test", extra_args, project, full_test_path })
+        )
         return vim.tbl_flatten({ "bloop", "test", extra_args, project, full_test_path })
     end
     if not test_path then

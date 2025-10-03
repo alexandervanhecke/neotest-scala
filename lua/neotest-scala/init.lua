@@ -133,14 +133,14 @@ local function get_project_name(path, runner)
         end
     end
     if runner == "bloop" then
-        local bloop_project = get_bloop_project_name()
-        if bloop_project then
-            return bloop_project
-        end
         local overridden_bloop_project = get_bloop_project()
         neotest_logging.info("overridden bloop project is " .. overridden_bloop_project)
         if overridden_bloop_project then
             return overridden_bloop_project
+        end
+        local bloop_project = get_bloop_project_name()
+        if bloop_project then
+            return bloop_project
         end
     end
     return nil
