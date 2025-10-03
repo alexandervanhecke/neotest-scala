@@ -100,6 +100,10 @@ local function get_framework()
     return "utest"
 end
 
+local function get_bloop_project()
+    return nil
+end
+
 ---Get first project name from bloop projects.
 ---@return string|nil
 local function get_bloop_project_name()
@@ -129,6 +133,10 @@ local function get_project_name(path, runner)
         local bloop_project = get_bloop_project_name()
         if bloop_project then
             return bloop_project
+        end
+        local overridden_bloop_project = get_bloop_project()
+        if overridden_bloop_project then
+            return overridden_bloop_project
         end
     end
     return nil
@@ -279,6 +287,13 @@ setmetatable(ScalaNeotestAdapter, {
         elseif opts.framework then
             get_framework = function()
                 return opts.framework
+            end
+        end
+        if is_callable(opts.bloop_project) then
+            get_bloop_project = opts.bloop_project
+        elseif opts.runner then
+            get_bloop_project = function()
+                return opts.bloop_project
             end
         end
         return ScalaNeotestAdapter
