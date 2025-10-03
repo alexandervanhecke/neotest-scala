@@ -6,6 +6,8 @@ local utils = require("neotest-scala.utils")
 ---@type neotest.Adapter
 local ScalaNeotestAdapter = { name = "neotest-scala" }
 
+local neotest_logging = require("neotest.logging")
+
 ScalaNeotestAdapter.root = lib.files.match_root_pattern("build.sbt")
 
 ---@async
@@ -101,6 +103,7 @@ local function get_framework()
 end
 
 local function get_bloop_project()
+    neotest_logging.info("getting the bloop project name, will return nil")
     return nil
 end
 
@@ -135,6 +138,7 @@ local function get_project_name(path, runner)
             return bloop_project
         end
         local overridden_bloop_project = get_bloop_project()
+        neotest_logging.info("overridden bloop project is " .. overridden_bloop_project)
         if overridden_bloop_project then
             return overridden_bloop_project
         end
