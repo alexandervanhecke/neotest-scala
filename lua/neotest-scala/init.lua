@@ -179,22 +179,13 @@ local function get_strategy_config(strategy, tree, project)
         }
     end
     if position.type == "test" then
-        local root = ScalaNeotestAdapter.root(position.path)
         local parent = tree:parent():data()
-        vim.uri_from_fname(root)
-        -- Constructs ScalaTestSuitesDebugRequest request.
+        -- Use the testClass format (same as code lens) so metals resolves
+        -- the build target automatically. The ScalaTestSuitesDebugRequest
+        -- alternative requires the exact BSP target URI that only metals
+        -- knows at runtime, and any mismatch causes a silent hang.
         metals_arguments = {
-            target = { uri = "file:" .. root .. "/?id=" .. project .. "-test" },
-            requestData = {
-                suites = {
-                    {
-                        className = get_parent_name(parent),
-                        tests = { utils.get_position_name(position) },
-                    },
-                },
-                jvmOptions = {},
-                environmentVariables = {},
-            },
+            testClass = get_parent_name(parent),
         }
     end
     if metals_arguments ~= nil then
