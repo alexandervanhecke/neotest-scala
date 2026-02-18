@@ -61,17 +61,23 @@ end
 ---@return neotest.Tree | nil
 function ScalaNeotestAdapter.discover_positions(path)
     local query = [[
-	  (object_definition
-	   name: (identifier) @namespace.name)
-	   @namespace.definition
-	  
+      (object_definition
+       name: (identifier) @namespace.name)
+       @namespace.definition
+
       (class_definition
-      name: (identifier) @namespace.name)
-      @namespace.definition
+       name: (identifier) @namespace.name)
+       @namespace.definition
 
       ((call_expression
         function: (call_expression
         function: (identifier) @func_name (#match? @func_name "test")
+        arguments: (arguments (string) @test.name))
+      )) @test.definition
+
+      ((call_expression
+        function: (call_expression
+        function: (identifier) @func_name (#match? @func_name "Scenario")
         arguments: (arguments (string) @test.name))
       )) @test.definition
     ]]
@@ -102,8 +108,7 @@ local function get_framework()
     return "utest"
 end
 
-local function get_bloop_project()
-    neotest_logging.info("getting the bloop project name, will return nil")
+local function get_bloop_project(path)
     return nil
 end
 
@@ -120,24 +125,24 @@ end
 ---Get project name from build file.
 ---@return string|nil
 local function get_project_name(path, runner)
-    local root = ScalaNeotestAdapter.root(path)
-    local build_file = root .. "/build.sbt"
-    local success, lines = pcall(lib.files.read_lines, build_file)
-    if not success then
-        return nil
-    end
-    for _, line in ipairs(lines) do
-        local project = line:match('^name := "(.+)"')
-        if project then
-            return project
-        end
-    end
     if runner == "bloop" then
-        local overridden_bloop_project = get_bloop_project()
-        neotest_logging.info("overridden bloop project is " .. overridden_bloop_project)
+        local overridden_bloop_project = get_bloop_project(path)
         if overridden_bloop_project then
             return overridden_bloop_project
         end
+    end
+    local root = ScalaNeotestAdapter.root(path)
+    local build_file = root .. "/build.sbt"
+    local success, lines = pcall(lib.files.read_lines, build_file)
+    if success then
+        for _, line in ipairs(lines) do
+            local project = line:match('^name := "(.+)"')
+            if project then
+                return project
+            end
+        end
+    end
+    if runner == "bloop" then
         local bloop_project = get_bloop_project_name()
         if bloop_project then
             return bloop_project
@@ -297,7 +302,7 @@ setmetatable(ScalaNeotestAdapter, {
         end
         if is_callable(opts.bloop_project) then
             get_bloop_project = opts.bloop_project
-        elseif opts.runner then
+        elseif opts.bloop_project then
             get_bloop_project = function()
                 return opts.bloop_project
             end

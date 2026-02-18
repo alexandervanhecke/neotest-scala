@@ -351,7 +351,10 @@ local function scalatest_framework()
     ---@param output string
     ---@return string|nil
     local function get_test_namespace(output)
-        return output:match("^([%w%.]+):") or nil
+        -- Match only lines where the colon is at the end (class name headers).
+        -- This prevents "Feature: ..." and "Scenario: ..." lines from being
+        -- treated as namespace changes.
+        return output:match("^([%w%.]+):$") or nil
     end
 
     -- Get test results from the test output.
@@ -376,6 +379,18 @@ local function scalatest_framework()
                 local test_name = get_test_name(line, "")
                 if test_name then
                     local test_id = test_namespace .. "." .. vim.trim(test_name)
+                    test_results[test_id] = TEST_PASSED
+                end
+            elseif test_namespace and line:match("^Scenario:") and vim.endswith(line, " *** FAILED ***") then
+                local scenario_name = line:match("^Scenario: (.+) %*%*%* FAILED %*%*%*$")
+                if scenario_name then
+                    local test_id = test_namespace .. "." .. vim.trim(scenario_name)
+                    test_results[test_id] = TEST_FAILED
+                end
+            elseif test_namespace and line:match("^Scenario:") then
+                local scenario_name = line:match("^Scenario: (.+)$")
+                if scenario_name then
+                    local test_id = test_namespace .. "." .. vim.trim(scenario_name)
                     test_results[test_id] = TEST_PASSED
                 end
             end
